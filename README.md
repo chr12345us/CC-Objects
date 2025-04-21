@@ -37,7 +37,7 @@ Included in python libraries:
 * getpass
 * logging
 
-There are four scripts:
+There are five scripts:
 - download_cybercontroller_objects.py
 	Downloads the Sites and Devices into 2 json files:
 		cyber_controller_organization.json - for sites and devices in the organization tree
@@ -50,9 +50,17 @@ There are four scripts:
 	Runing the script creates a new output file: cyber_controller_organization_updated.json
 	For input, it uses the original cyber_controller_organization.json and two other files: clicredentials.ini and snmpcredentials.ini - some .example files are in the source directory. 
 	If the files do not exist or credentials in the files do not match any existing data in the organization json file, nothing will be changed.
+- cyber_controller_sites.py
+	Use one or more small .ini file (located in the ./input directory)to create multiple json files from the original organization json file using selective sites. the output file is in the output directory.
 - update_cybercontroller_objects.py
-	Updates certain items from devices in the Organization Tree, such as credentials for SHH/HTTPS and SNMP connectivity, using the cyber_controller_organization_updated.json file (file needs to be created from cyber_controller_organization.json either by editing directly or using another script)
-	NOTE: for the "update" script, use the "download" script to get the json files from the same device!
+	Updates certain items from devices in the Organization Tree, such as credentials for SHH/HTTPS and SNMP connectivity, using the cyber_controller_organization_nnnnn.json file (file needs to be created from cyber_controller_organization.json either by editing directly or using another script)
+	NOTE: 
+	1-for the "update" script, use the "download" script to get the json files from the same device!
+	2-Use the "cyber_controller_sites.py" script to selectively redice the sites that are updated
+	The files need to be specified as arguments to the command input using a flag:
+		python update_cybercontroller_objects.py -p cyber_controller_physical.json -o cyber_controller_organization_updated.json
+	Or:
+		python update_cybercontroller_objects.py -p cyber_controller_physical.json
 
 Each of these scripts can get credentials interactively when the script is started or from a corresponding ini file: download.ini, upload.ini and update.ini
 The structure of each of these files is:
