@@ -3,6 +3,7 @@ import requests
 import urllib3
 import json
 import os
+import argparse
 from configparser import ConfigParser
 from getpass import getpass
 import logging
@@ -152,14 +153,10 @@ def upload_configuration(dst_cc_ip, dst_cc_user, dst_cc_password, json_data, tre
     # Update devices
     for device in json_data["devices"]:
         device_name = device['name']
-#        print("\nDevice Name: ", device_name)
         orm_ID = device['id']
         src_parent_device_id = device['parentOrmID']
         parent_site_name = get_site_name_by_id(src_parent_device_id, json_data)
-#        print("Parent site name: ", parent_site_name)
         parent_orm_id = dst_cc_root_site_id if not parent_site_name else get_parent_site_id(parent_site_name, dst_session, dst_cc_ip)
-#        print("Parent ormID: ", parent_orm_id)
-#        print("ormID: ", orm_ID)
 
         payload = {
             "name": device['name'],
@@ -170,11 +167,8 @@ def upload_configuration(dst_cc_ip, dst_cc_user, dst_cc_password, json_data, tre
                 "deviceAccess": device['deviceAccess']
             }
         }
-#        print(payload)
         url = f'https://{dst_cc_ip}/mgmt/system/config/tree/device'
         response = dst_session.put(url, verify=False, json=payload)
-#        print("Response status:", response.status_code)
-#        print("Response body:", response.text)
         if response.status_code != 200:
             print(f"Failed to update device: {device_name}")
             error = response.json()
@@ -183,31 +177,45 @@ def upload_configuration(dst_cc_ip, dst_cc_user, dst_cc_password, json_data, tre
             print(f"Updated device: {device_name}")
             logging.info(f"Updated device: {device_name}")
 
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Update Cyber-Controller objects from JSON files')
+    parser.add_argument('-p', '--physical', required=False, help='Path to physical tree JSON file')
+    parser.add_argument('-o', '--organizational', required=False, help='Path to organizational tree JSON file')
+    return parser.parse_args()
+
 def main():
     logging.info('Starting the script.')
+    
+    # Parse command line arguments
+    args = parse_arguments()
     
     # Load credentials from config file or fall back to console input
     credentials = load_config()
     
-    # Load and process Physical tree configuration
-    physical_json = load_json_file('cyber_controller_physical.json')
-    if physical_json:
-        print("\nUploading Physical tree configuration...")
-        upload_configuration(credentials['ip'], credentials['username'], credentials['password'], 
-                           physical_json, 'Physical')
-
-    # Load and process Organization tree configuration
-    organization_json = load_json_file('cyber_controller_organization_updated.json')
-    if organization_json:
-        print("\nUploading Organization tree configuration...")
-        upload_configuration(credentials['ip'], credentials['username'], credentials['password'], 
-                           organization_json, 'Organization')
-
+    # Process Physical tree configuration if provided
+    if args.physical:
+        physical_json = load_json_file(args.physical)
+        if physical_json:
+            print(f"\nUploading Physical tree configuration from {args.physical}...")
+            upload_configuration(credentials['ip'], credentials['username'], credentials['password'], 
+                               physical_json, 'Physical')
+    
+    # Process Organization tree configuration if provided
+    if args.organizational:
+        organization_json = load_json_file(args.organizational)
+        if organization_json:
+            print(f"\nUploading Organization tree configuration from {args.organizational}...")
+            upload_configuration(credentials['ip'], credentials['username'], credentials['password'], 
+                               organization_json, 'Organization')
+    
+    # If no files were provided, inform the user
+    if not args.physical and not args.organizational:
+        print("No input files specified. Use -p for physical tree JSON and -o for organizational tree JSON.")
+        parser = argparse.ArgumentParser()
+        parser.print_help()
+    
     logging.info('Finishing the script.')
     print("\nDone.")
-#    print("You can see the log file in this directory")
-#    print("This prompt will be closed in 5 seconds.")
-#    time.sleep(5)
 
 if __name__ == "__main__":
     main()
