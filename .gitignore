@@ -1,0 +1,30 @@
+# Comments start with a hash symbol
+
+# Ignore specific files
+filename.txt
+
+
+# Ignore all files with specific extension
+*.log
+*.tmp
+*.json
+*.ini
+
+# Ignore all files in a directory
+logs/
+temp/
+
+# Ignore all files in a directory but keep the directory
+logs/*
+!logs/.gitkeep
+input/
+output/
+!input/.gitkeep
+!output/.gitkeep
+
+# Ignore files with patterns
+#**/node_modules
+#build/
+
+# Negate a pattern (include a file that would otherwise be ignored)
+#!important.log
